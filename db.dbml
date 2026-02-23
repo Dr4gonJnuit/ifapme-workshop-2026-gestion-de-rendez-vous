@@ -1,0 +1,41 @@
+Table client {
+    id int [pk, increment]
+    firstname varchar
+    lastname varchar
+    email varchar
+    phone varchar
+}
+
+Table prestataire {
+    id int [pk, increment]
+    profession varchar
+    nom varchar
+    prenom varchar
+}
+
+Table user {
+    id int [pk, increment]
+    username varchar
+    password varchar [Note: 'hashed password']
+    email varchar
+    phone varchar
+}
+
+Table rdv {
+    id int [pk, increment]
+    client_id int
+    user_id int [Note: 'The user who created the appointment']
+    date datetime [Note: 'Date and time of the appointment']
+    status_id varchar
+    prestataire_id varchar
+}
+
+Table status {
+    id int [pk, increment]
+    status_name varchar [Note: 'e.g., scheduled, completed, canceled']
+}
+
+ref: rdv.prestataire_id - prestataire.id
+ref: rdv.client_id <> client.id
+ref: rdv.user_id > user.id
+ref: rdv.status_id > status.status_name
