@@ -12,7 +12,7 @@ class RegisterController extends Controller
     // Affiche le formulaire d'inscription
     public function showSignupForm()
     {
-        return view('pages.auth.signup'); // Assure-toi que signup.blade.php existe
+        return view('pages.auth.signup');
     }
 
     // Traite l'inscription
