@@ -20,3 +20,12 @@ Route::post('/signup', [RegisterController::class, 'signup']);
 Route::get('/dashboard', function () {
     return view('pages.dashboard.ecommerce', ['title' => 'E-commerce Dashboard']);
 })->name('dashboard');
+
+// rendez-vous management (ajouté pour la fonctionnalité RDV)
+use App\Http\Controllers\RdvController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('rdvs', RdvController::class);
+    // manual status adjustment
+    Route::post('rdvs/{rdv}/status', [RdvController::class, 'updateStatus'])->name('rdvs.updateStatus');
+});

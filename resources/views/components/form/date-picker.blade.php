@@ -6,6 +6,9 @@
     'placeholder' => 'Select date',
     'name' => null,
     'dateFormat' => 'Y-m-d',
+    'enableTime' => true,
+    'time24hr' => true,
+    'minDate' => null, // e.g. 'today' or a specific date string
 ])
 
 <div x-data="{
@@ -17,6 +20,9 @@
                 static: true,
                 monthSelectorType: 'static',
                 dateFormat: '{{ $dateFormat }}',
+                enableTime: {{ $enableTime ? 'true' : 'false' }},
+                time_24hr: {{ $time24hr ? 'true' : 'false' }},
+                {{ $minDate ? "minDate: '" . $minDate . "'," : '' }}
                 defaultDate: {{ $defaultDate ? (is_array($defaultDate) ? json_encode($defaultDate) : "'" . $defaultDate . "'") : 'null' }},
                 onChange: (selectedDates, dateStr, instance) => {
                     this.$dispatch('date-change', {

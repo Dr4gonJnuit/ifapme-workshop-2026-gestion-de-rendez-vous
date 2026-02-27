@@ -20,6 +20,12 @@ class MenuHelper
                 'path' => '/calendar',
             ],
             [
+                
+                'icon' => 'calendar',
+                'name' => 'Rendez-vous',
+                'path' => '/rdvs',
+            ],
+            [
                 'icon' => 'user-profile',
                 'name' => 'User Profile',
                 'path' => '/profile',
