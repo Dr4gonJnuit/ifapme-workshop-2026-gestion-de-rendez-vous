@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
-
+use App\Http\Controllers\ClientController;
 
 // dashboard pages
 Route::get('/', function () {
@@ -20,3 +20,6 @@ Route::post('/signup', [RegisterController::class, 'signup']);
 Route::get('/dashboard', function () {
     return view('pages.dashboard.ecommerce', ['title' => 'E-commerce Dashboard']);
 })->name('dashboard');
+
+// Using middleware later for authentication and authorization
+Route::resource('clients', ClientController::class);

@@ -16,6 +16,7 @@ class SidebarController extends Controller
                         'icon' => 'grid-icon',
                         'name' => 'Dashboard',
                         'subItems' => [
+                            ['name' => 'Clients', 'path' => '/clients'],
                             ['name' => 'Ecommerce', 'path' => '/'],
                             ['name' => 'Analytics', 'path' => '/analytics'],
                             ['name' => 'Marketing', 'path' => '/marketing'],
