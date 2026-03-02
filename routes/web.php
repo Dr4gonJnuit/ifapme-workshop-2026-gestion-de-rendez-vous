@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PrestataireController;
+use App\Http\Controllers\RdvController;
 
 // dashboard pages
 Route::get('/', function () {
@@ -26,11 +28,12 @@ Route::post('/prestataire', [PrestataireController::class, 'store'])->name('pres
 Route::delete('/prestataire/{id}', [PrestataireController::class, 'destroy'])->name('prestataire.destroy');
 Route::put('/prestataire/{id}', [PrestataireController::class, 'update'])->name('prestataire.update');
 
-// rendez-vous management (ajouté pour la fonctionnalité RDV)
-use App\Http\Controllers\RdvController;
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('rdvs', RdvController::class);
     // manual status adjustment
     Route::post('rdvs/{rdv}/status', [RdvController::class, 'updateStatus'])->name('rdvs.updateStatus');
 });
+
+// Using middleware later for authentication and authorization
+Route::resource('clients', ClientController::class);
