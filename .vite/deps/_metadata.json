@@ -1,0 +1,43 @@
+{
+  "hash": "e80d1a31",
+  "configHash": "23f401fc",
+  "lockfileHash": "0d5b2adb",
+  "browserHash": "79fca50d",
+  "optimized": {
+    "alpinejs": {
+      "src": "../../node_modules/alpinejs/dist/module.esm.js",
+      "file": "alpinejs.js",
+      "fileHash": "03e4de5e",
+      "needsInterop": false
+    },
+    "apexcharts": {
+      "src": "../../node_modules/apexcharts/dist/apexcharts.esm.js",
+      "file": "apexcharts.js",
+      "fileHash": "9441613a",
+      "needsInterop": false
+    },
+    "flatpickr": {
+      "src": "../../node_modules/flatpickr/dist/esm/index.js",
+      "file": "flatpickr.js",
+      "fileHash": "4727bdd7",
+      "needsInterop": false
+    },
+    "@fullcalendar/core": {
+      "src": "../../node_modules/@fullcalendar/core/index.js",
+      "file": "@fullcalendar_core.js",
+      "fileHash": "001546b3",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "0c8bf042",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-PZ5AY32C": {
+      "file": "chunk-PZ5AY32C.js"
+    }
+  }
+}

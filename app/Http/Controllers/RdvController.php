@@ -19,32 +19,68 @@ class RdvController extends BaseController
         $this->middleware('auth');
     }
 
-    public function index()
+    /**
+     * Vérifie s'il y a un chevauchement avec un rendez-vous existant pour le même prestataire.
+     *
+     * @param string $prestataireId
+     * @param Carbon $start
+     * @param Carbon $end
+     * @param string|null $excludeRdvId ID du rendez-vous à exclure (pour l'update)
+     * @return bool
+     */
+    private function hasOverlap($prestataireId, Carbon $start, Carbon $end, $excludeRdvId = null)
     {
-        $rdvs = Rdv::with(['client', 'prestataire', 'status'])
-            ->orderBy('date', 'desc');
+        $query = Rdv::where('prestataire_id', $prestataireId)
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_time', [$start, $end]) // début dans l'intervalle
+                  ->orWhereBetween('end_time', [$start, $end]) // fin dans l'intervalle
+                  ->orWhere(function ($q2) use ($start, $end) {
+                      $q2->where('start_time', '<=', $start)
+                         ->where('end_time', '>=', $end); // chevauchement complet
+                  });
+            });
 
-        // if pagination used we need to modify the collection after retrieving
-        $paginated = $rdvs->paginate(15);
+        if ($excludeRdvId) {
+            $query->where('id', '!=', $excludeRdvId);
+        }
 
-        // sync status column with computed value based solely on timestamp
-        // use simple comparison lte(now()) to avoid timezone confusion
-        $paginated->getCollection()->transform(function (Rdv $rdv) {
-            $date = $rdv->date;
+        return $query->exists();
+    }
 
-            if ($date && $date->lte(now())) {
-                // automatically mark past items, but never revert a future status
-                if ($rdv->status_text !== 'passé') {
-                    $statusId = Status::findOrCreate('passé')->id;
-                    $rdv->update(['status' => $statusId]);
-                    $rdv->setRelation('status', Status::find($statusId));
-                }
-            }
+    public function index(Request $request)
+    {
+        $query = Rdv::with(['client', 'prestataire'])
+                    ->where('start_time', '>=', Carbon::now());
 
-            return $rdv;
-        });
+        if ($request->filled('prestataire_id')) {
+            $query->where('prestataire_id', $request->prestataire_id);
+        }
 
-        return view('pages.rdv.index', ['rdvs' => $paginated]);
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+
+        if ($request->filled('date_debut')) {
+            $query->whereDate('start_time', '>=', Carbon::parse($request->date_debut));
+        }
+        if ($request->filled('date_fin')) {
+            $query->whereDate('start_time', '<=', Carbon::parse($request->date_fin));
+        }
+
+        $order = $request->get('order', 'start_time');
+        $direction = $request->get('direction', 'asc');
+        $allowedOrders = ['start_time', 'client_id', 'prestataire_id'];
+        if (!in_array($order, $allowedOrders)) {
+            $order = 'start_time';
+        }
+        $query->orderBy($order, $direction);
+
+        $rdvs = $query->paginate(15)->appends($request->query());
+
+        $prestataires = Prestataire::orderBy('lastname')->orderBy('firstname')->get();
+        $clients = Client::orderBy('lastname')->orderBy('firstname')->get();
+
+        return view('pages.rdv.index', compact('rdvs', 'prestataires', 'clients'));
     }
 
     public function create()
@@ -58,7 +94,7 @@ class RdvController extends BaseController
     protected function determineStatusId(Carbon $date)
     {
         $name = $date->isPast() ? 'passé' : 'à venir';
-        $status = Status::findOrCreate($name);
+        $status = Status::firstOrCreate(['name' => $name]);
         return $status->id;
     }
 
@@ -66,9 +102,16 @@ class RdvController extends BaseController
     {
         $validated = $request->validated();
 
-        $date = Carbon::parse($validated['date']);
+        $start = Carbon::parse($validated['start_time']);
+        $end   = Carbon::parse($validated['end_time']);
+
+        // Vérification des chevauchements pour le même prestataire
+        if ($this->hasOverlap($validated['prestataire_id'], $start, $end)) {
+            return back()->withErrors(['start_time' => 'Ce créneau horaire est déjà occupé pour ce prestataire.'])->withInput();
+        }
+
         $validated['user_id'] = Auth::id();
-        $validated['status'] = $this->determineStatusId($date);
+        $validated['status'] = $this->determineStatusId($start);
 
         Rdv::create($validated);
 
@@ -87,8 +130,15 @@ class RdvController extends BaseController
     {
         $validated = $request->validated();
 
-        $date = Carbon::parse($validated['date']);
-        $validated['status'] = $this->determineStatusId($date);
+        $start = Carbon::parse($validated['start_time']);
+        $end   = Carbon::parse($validated['end_time']);
+
+        // Vérification des chevauchements pour le même prestataire, en excluant le rendez-vous actuel
+        if ($this->hasOverlap($validated['prestataire_id'], $start, $end, $rdv->id)) {
+            return back()->withErrors(['start_time' => 'Ce créneau horaire est déjà occupé pour ce prestataire.'])->withInput();
+        }
+
+        $validated['status'] = $this->determineStatusId($start);
 
         $rdv->update($validated);
 
@@ -101,33 +151,28 @@ class RdvController extends BaseController
         return redirect()->route('rdvs.index')->with('success', 'Rendez-vous supprimé.');
     }
 
-    /**
-     * Update the status manually (à venir / passé).
-     */
     public function updateStatus(Request $request, Rdv $rdv)
     {
         $validated = $request->validate([
             'status_text' => 'required|in:à venir,passé',
         ]);
 
-        // prevent reverting from "passé" to "à venir" if a conflict would occur
         if ($validated['status_text'] === 'à venir' && $rdv->status_text === 'passé') {
-            // check if changing to "à venir" would create a conflict
-            $aVenirStatusId = Status::findOrCreate('à venir')->id;
-            $start = $rdv->date->clone()->subMinutes(15);
-            $end = $rdv->date->clone()->addMinutes(15);
+            $aVenirStatusId = Status::firstOrCreate(['name' => 'à venir'])->id;
+            $start = $rdv->start_time->clone()->subMinutes(15);
+            $end   = $rdv->start_time->clone()->addMinutes(15);
 
             $conflict = Rdv::where('status', $aVenirStatusId)
-                ->whereBetween('date', [$start, $end])
+                ->whereBetween('start_time', [$start, $end])
                 ->where('id', '!=', $rdv->id)
                 ->exists();
 
             if ($conflict) {
-                return back()->withErrors(['status_text' => 'Impossible de reverser en "à venir" : un autre rendez-vous existe déjà dans cette plage horaire.']);
+                return back()->withErrors(['status_text' => 'Impossible de repasser en "à venir" : un autre rendez-vous existe déjà dans cette plage horaire.']);
             }
         }
 
-        $statusId = Status::findOrCreate($validated['status_text'])->id;
+        $statusId = Status::firstOrCreate(['name' => $validated['status_text']])->id;
         $rdv->update(['status' => $statusId]);
 
         return redirect()->route('rdvs.index')->with('success', 'Statut mis à jour.');

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use App\Models\Client;
 use App\Models\Prestataire;
@@ -17,9 +16,11 @@ class Rdv extends Model
     protected $keyType = 'string';
     public $timestamps = false;
 
-    // mass assignment and casting for the rdv attributes
-    protected $fillable = ['date', 'client_id', 'prestataire_id', 'user_id', 'status'];
-    protected $casts = ['date' => 'datetime'];
+    protected $fillable = ['start_time', 'end_time', 'client_id', 'prestataire_id', 'user_id', 'status'];
+    protected $casts = [
+        'start_time' => 'datetime',
+        'end_time'   => 'datetime',
+    ];
 
     public function client() {
         return $this->belongsTo(Client::class, 'client_id', 'id');
@@ -37,7 +38,6 @@ class Rdv extends Model
         return $this->belongsTo(Status::class, 'status', 'id');
     }
 
-    // generate UUID automatically when creating
     protected static function boot()
     {
         parent::boot();
@@ -49,11 +49,10 @@ class Rdv extends Model
     }
 
     /**
-     * Return a human-readable status (name field or derived from date).
+     * Retourne le statut textuel (à partir de la relation ou calculé sur start_time)
      */
     public function getStatusTextAttribute()
     {
-        // prefer the stored/related status if available
         if ($this->relationLoaded('status')) {
             $rel = $this->getRelation('status');
             if ($rel instanceof Status) {
@@ -61,18 +60,14 @@ class Rdv extends Model
             }
         }
         if ($this->status) {
-            // if relation not loaded, fall back to name lookup from the id
             $status = Status::find($this->status);
             if ($status) {
                 return $status->name;
             }
         }
-
-        // as a last resort, compute from the date
-        if ($this->date instanceof Carbon) {
-            return $this->date->lte(Carbon::now()) ? 'passé' : 'à venir';
+        if ($this->start_time instanceof Carbon) {
+            return $this->start_time->lte(Carbon::now()) ? 'passé' : 'à venir';
         }
-
         return '';
     }
 }

@@ -1,101 +1,127 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Gestion des rendez-vous" />
-
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Liste des rendez-vous</h3>
-            <a href="{{ route('rdvs.create') }}" class="inline-flex items-center rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
-                Nouveau rendez-vous
-            </a>
-        </div>
-
-        @if(session('success'))
-            <div class="mb-4 rounded bg-green-100 px-4 py-2 text-green-800">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="mb-4 rounded bg-red-100 px-4 py-2 text-red-800">
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <div class="overflow-x-auto">
-            <table class="w-full table-auto">
-                <thead class="bg-gray-100 text-left text-xs font-semibold uppercase text-gray-600">
-                    <tr>
-                        <th class="px-3 py-2">Date</th>
-                        <th class="px-3 py-2">Client</th>
-                        <th class="px-3 py-2">Prestataire</th>
-                        <th class="px-3 py-2">Statut</th>
-                        <th class="px-3 py-2">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm text-gray-700">
-                    @forelse($rdvs as $rdv)
-                        <tr class="border-t">
-                            <td class="px-3 py-2">{{ $rdv->date->format('Y-m-d H:i') }}</td>
-                            <td class="px-3 py-2">{{ optional($rdv->client)->firstname }} {{ optional($rdv->client)->lastname }}</td>
-                            <td class="px-3 py-2">{{ optional($rdv->prestataire)->firstname }} {{ optional($rdv->prestataire)->lastname }}</td>
-                            <td class="px-3 py-2">
-                                <form method="POST" action="{{ route('rdvs.updateStatus', $rdv) }}" class="flex items-center space-x-2 status-form" data-current-status="{{ $rdv->status_text }}" data-rdv-id="{{ $rdv->id }}">
-                                    @csrf
-                                    <select name="status_text" class="h-8 rounded border-gray-300 status-select" required>
-                                        <option value="à venir" {{ $rdv->status_text === 'à venir' ? 'selected' : '' }}>à venir</option>
-                                        <option value="passé" {{ $rdv->status_text === 'passé' ? 'selected' : '' }}>passé</option>
-                                    </select>
-                                    <button type="submit" class="text-blue-600 hover:underline text-sm status-btn">Actualiser</button>
-                                </form>
-                            </td>
-                            <td class="px-3 py-2 space-x-2">
-                                <a href="{{ route('rdvs.edit', $rdv) }}" class="text-indigo-600 hover:underline">Modifier</a>
-                                <form class="inline" method="POST" action="{{ route('rdvs.destroy', $rdv) }}" onsubmit="return confirm('Êtes-vous sûr(e) ?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:underline">Supprimer</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-3 py-2 text-center text-gray-500">Aucun rendez-vous trouvé.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-4">
-            {{ $rdvs->links() }}
-        </div>
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Gestion des rendez-vous</h1>
+        <a href="{{ route('rdvs.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            + Nouveau rendez-vous
+        </a>
     </div>
 
-    <script>
-        document.querySelectorAll('.status-form').forEach(form => {
-            const select = form.querySelector('.status-select');
-            const currentStatus = form.dataset.currentStatus;
-            const rDVId = form.dataset.rdvId;
+    {{-- Formulaire de filtres --}}
+    <form method="GET" action="{{ route('rdvs.index') }}" class="mb-6 bg-white shadow-md rounded-lg p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {{-- Filtre prestataire --}}
+            <div>
+                <label for="prestataire_id" class="block text-sm font-medium text-gray-700 mb-1">Prestataire</label>
+                <select name="prestataire_id" id="prestataire_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Tous</option>
+                    @foreach($prestataires as $prestataire)
+                        <option value="{{ $prestataire->id }}" {{ request('prestataire_id') == $prestataire->id ? 'selected' : '' }}>
+                            {{ $prestataire->firstname }} {{ $prestataire->lastname }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-            form.addEventListener('submit', function(e) {
-                const newStatus = select.value;
-                if (currentStatus === 'passé' && newStatus === 'à venir') {
-                    const confirmed = confirm(
-                        'Attention : Reverser ce rendez-vous de "passé" à "\u00e0 venir" peut être bloqué ' +
-                        'si un autre rendez-vous "à venir" existe déjà dans une plage de ±15 minutes.\n\n' +
-                        'Voulez-vous continuer ?'
-                    );
-                    if (!confirmed) {
-                        e.preventDefault();
-                    }
-                }
-            });
-        });
-    </script>
+            {{-- Filtre client --}}
+            <div>
+                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                <select name="client_id" id="client_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Tous</option>
+                    @foreach($clients as $client)
+                        <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
+                            {{ $client->firstname }} {{ $client->lastname }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Filtre date début (sur start_time) --}}
+            <div>
+                <label for="date_debut" class="block text-sm font-medium text-gray-700 mb-1">Date début</label>
+                <input type="date" name="date_debut" id="date_debut" value="{{ request('date_debut') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+
+            {{-- Filtre date fin (sur start_time) --}}
+            <div>
+                <label for="date_fin" class="block text-sm font-medium text-gray-700 mb-1">Date fin</label>
+                <input type="date" name="date_fin" id="date_fin" value="{{ request('date_fin') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+        </div>
+
+        <div class="mt-4 flex justify-end space-x-2">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Filtrer</button>
+            <a href="{{ route('rdvs.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Réinitialiser</a>
+        </div>
+    </form>
+
+    {{-- Tableau des rendez-vous --}}
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <a href="{{ route('rdvs.index', array_merge(request()->query(), ['order' => 'start_time', 'direction' => request('order') == 'start_time' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                            <span>Créneau</span>
+                            @if(request('order') == 'start_time')
+                                <span>{{ request('direction') == 'asc' ? '↑' : '↓' }}</span>
+                            @endif
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Client
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Prestataire
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Statut
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($rdvs as $rdv)
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $rdv->start_time->format('d/m/Y H:i') }} - {{ $rdv->end_time->format('H:i') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $rdv->client->firstname ?? '' }} {{ $rdv->client->lastname ?? '' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $rdv->prestataire->firstname ?? '' }} {{ $rdv->prestataire->lastname ?? '' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $rdv->status_text }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('rdvs.edit', $rdv) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Modifier</a>
+                            <form action="{{ route('rdvs.destroy', $rdv) }}" method="POST" class="inline-block" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            Aucun rendez-vous à venir.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Pagination --}}
+    <div class="mt-4">
+        {{ $rdvs->links() }}
+    </div>
+</div>
 @endsection
