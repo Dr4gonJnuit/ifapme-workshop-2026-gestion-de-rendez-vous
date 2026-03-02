@@ -25,3 +25,12 @@ Route::get('/prestataire', [PrestataireController::class, 'index'])->name('prest
 Route::post('/prestataire', [PrestataireController::class, 'store'])->name('prestataire.store');
 Route::delete('/prestataire/{id}', [PrestataireController::class, 'destroy'])->name('prestataire.destroy');
 Route::put('/prestataire/{id}', [PrestataireController::class, 'update'])->name('prestataire.update');
+
+// rendez-vous management (ajouté pour la fonctionnalité RDV)
+use App\Http\Controllers\RdvController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('rdvs', RdvController::class);
+    // manual status adjustment
+    Route::post('rdvs/{rdv}/status', [RdvController::class, 'updateStatus'])->name('rdvs.updateStatus');
+});
