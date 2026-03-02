@@ -24,5 +24,5 @@ class Prestataire extends Model
         });
     }
 
-    public $timestamps = false; // car ta table n'a pas created_at / updated_at
+    public $timestamps = false;
 }
