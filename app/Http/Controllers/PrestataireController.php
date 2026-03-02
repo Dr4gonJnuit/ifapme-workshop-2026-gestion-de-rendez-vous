@@ -9,14 +9,11 @@ use Illuminate\Validation\Rule;
 
 class PrestataireController extends Controller
 {
-    /**
-     * Affiche la liste des prestataires avec pagination et recherche
-     */
+
     public function index(Request $request)
     {
         $query = Prestataire::query();
 
-        // Recherche par prénom, nom, email ou téléphone
         if ($request->filled('q')) {
             $search = $request->input('q');
             $query->where(function($q) use ($search) {
@@ -27,18 +24,13 @@ class PrestataireController extends Controller
             });
         }
 
-        // Pagination : 10 par page, triés par nom
         $prestataires = $query->orderBy('lastname')->paginate(10);
 
-        // Pour garder le paramètre de recherche dans la pagination
         $prestataires->appends($request->all());
 
         return view('pages.from.prestataire', compact('prestataires'));
     }
 
-    /**
-     * Création d'un nouveau prestataire
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -57,9 +49,6 @@ class PrestataireController extends Controller
                          ->with('success', 'Prestataire ajouté avec succès.');
     }
 
-    /**
-     * Mise à jour d'un prestataire existant
-     */
     public function update(Request $request, $id)
     {
         $prestataire = Prestataire::findOrFail($id);
@@ -88,9 +77,6 @@ class PrestataireController extends Controller
                          ->with('success', 'Prestataire mis à jour avec succès.');
     }
 
-    /**
-     * Suppression d'un prestataire
-     */
     public function destroy($id)
     {
         $prestataire = Prestataire::findOrFail($id);

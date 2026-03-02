@@ -9,13 +9,11 @@ use App\Models\Utilisateur;
 
 class RegisterController extends Controller
 {
-    // Affiche le formulaire d'inscription
     public function showSignupForm()
     {
         return view('pages.auth.signup');
     }
 
-    // Traite l'inscription
     public function signup(Request $request)
     {
         $validated = $request->validate([

@@ -1,25 +1,106 @@
 @extends('layouts.app')
 
+@php
+use Illuminate\Support\Carbon;
+@endphp
+
 @section('content')
-  <div class="grid grid-cols-12 gap-4 md:gap-6">
-    <div class="col-span-12 space-y-6 xl:col-span-7">
-      <x-ecommerce.ecommerce-metrics />
-      <x-ecommerce.monthly-sale />
+<div class="p-6 space-y-6">
+
+    <h1 class="text-2xl font-bold">Bienvenue, {{ Auth::user()->username ?? 'Utilisateur' }} !</h1>
+
+
+        <div class="flex gap-4 mb-6">
+        <a href="{{ route('rdvs.index') }}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+           Rendez-vous
+        </a>
+
+        <a href="{{ route('clients.index') }}" 
+          class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+          Clients
+        </a>
+
+        <a href="{{ route('prestataire.index') }}" 
+           class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
+           Prestataires
+        </a>
     </div>
-    <div class="col-span-12 xl:col-span-5">
-        <x-ecommerce.monthly-target />
+    
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Rendez-vous à venir cette semaine</h2>
+        @php
+            $today = Carbon::today();
+            $endOfWeek = Carbon::today()->endOfWeek();
+            $weeklyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
+                            ->where('user_id', Auth::id())
+                            ->whereBetween('date', [$today, $endOfWeek])
+                            ->orderBy('date', 'asc')
+                            ->get();
+        @endphp
+
+        @if($weeklyRdv->isEmpty())
+            <p class="text-gray-500">Aucun rendez-vous prévu cette semaine.</p>
+        @else
+            <ul class="space-y-3">
+                @foreach($weeklyRdv as $rdv)
+                    <li class="p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div class="flex justify-between">
+                            <span class="font-medium">
+                                {{ $rdv->date->format('d/m/Y H:i') }}
+                            </span>
+                            <span class="text-theme-sm">
+                                Client : {{ $rdv->client->firstname ?? 'Non défini' }} {{ $rdv->client->lastname ?? '' }}
+                            </span>
+                        </div>
+                        <div class="mt-1 text-gray-500 text-sm">
+                            Prestataire : 
+                            {{ $rdv->prestataire->firstname ?? 'Non défini' }} {{ $rdv->prestataire->lastname ?? '' }} 
+                            ({{ $rdv->prestataire->profession ?? 'Non défini' }}) 
+                            | Statut : {{ $rdv->status_text }}
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
     </div>
 
-    <div class="col-span-12">
-      <x-ecommerce.statistics-chart />
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Rendez-vous à venir ce mois</h2>
+        @php
+            $endOfMonth = Carbon::today()->endOfMonth();
+            $monthlyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
+                            ->where('user_id', Auth::id())
+                            ->whereBetween('date', [$today, $endOfMonth])
+                            ->orderBy('date', 'asc')
+                            ->get();
+        @endphp
+
+        @if($monthlyRdv->isEmpty())
+            <p class="text-gray-500">Aucun rendez-vous prévu ce mois.</p>
+        @else
+            <ul class="space-y-3">
+                @foreach($monthlyRdv as $rdv)
+                    <li class="p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div class="flex justify-between">
+                            <span class="font-medium">
+                                {{ $rdv->date->format('d/m/Y H:i') }}
+                            </span>
+                            <span class="text-theme-sm">
+                                Client : {{ $rdv->client->firstname ?? 'Non défini' }} {{ $rdv->client->lastname ?? '' }}
+                            </span>
+                        </div>
+                        <div class="mt-1 text-gray-500 text-sm">
+                            Prestataire : 
+                            {{ $rdv->prestataire->firstname ?? 'Non défini' }} {{ $rdv->prestataire->lastname ?? '' }} 
+                            ({{ $rdv->prestataire->profession ?? 'Non défini' }}) 
+                            | Statut : {{ $rdv->status_text }}
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
     </div>
 
-    <div class="col-span-12 xl:col-span-5">
-      <x-ecommerce.customer-demographic />
-    </div>
-
-    <div class="col-span-12 xl:col-span-7">
-      <x-ecommerce.recent-orders />
-    </div>
-  </div>
+</div>
 @endsection

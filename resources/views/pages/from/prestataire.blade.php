@@ -2,7 +2,6 @@
 
 @section('content')
 
-<!-- FLASH MESSAGES -->
 <div class="fixed top-4 right-4 z-[9999] space-y-2">
     @if(session('success'))
         <div id="flash-success" class="bg-green-500 text-white px-4 py-2 rounded shadow-lg">
@@ -24,13 +23,10 @@
     setTimeout(() => { const flashErr = document.getElementById('flash-error'); if(flashErr) flashErr.remove(); }, 4000);
 </script>
 
-<!-- CONTENU PRINCIPAL -->
 <div class="grid grid-cols-12 gap-4 md:gap-6">
 
-    <!-- Prestataires Table -->
     <div class="col-span-12 space-y-6">
 
-        <!-- Header + recherche -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl text-gray-400 font-bold">Liste des Prestataires</h1>
 
@@ -52,7 +48,6 @@
             </div>
         </div>
 
-        <!-- TABLE -->
         <div class="bg-white shadow rounded-lg overflow-x-auto">
             <table class="min-w-full text-left text-sm">
                 <thead class="bg-gray-100 border-b">
@@ -95,9 +90,7 @@
     </div>
 </div>
 
-<!-- MODALS -->
 
-<!-- Ajouter -->
 <div id="addPrestataireModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 relative">
         <h2 class="text-xl font-bold mb-4">Ajouter un prestataire</h2>
@@ -131,7 +124,6 @@
     </div>
 </div>
 
-<!-- Éditer -->
 <div id="editPrestataireModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 relative">
         <h2 class="text-xl font-bold mb-4">Modifier un prestataire</h2>
@@ -166,7 +158,6 @@
     </div>
 </div>
 
-<!-- Supprimer -->
 <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
         <h2 class="text-xl font-bold mb-4">Confirmer la suppression</h2>
@@ -184,7 +175,6 @@
 </div>
 
 <script>
-/* Modals Ajouter */
 function openAddModal() {
     document.getElementById('addPrestataireModal').classList.remove('hidden');
     document.getElementById('addPrestataireModal').classList.add('flex');
@@ -194,7 +184,6 @@ function closeAddModal() {
     document.getElementById('addPrestataireModal').classList.remove('flex');
 }
 
-/* Modals Editer */
 function openEditModal(prestataire) {
     document.getElementById('editFirstname').value = prestataire.firstname;
     document.getElementById('editLastname').value = prestataire.lastname;
@@ -210,7 +199,7 @@ function closeEditModal() {
     document.getElementById('editPrestataireModal').classList.remove('flex');
 }
 
-/* Modal Supprimer */
+
 function openDeleteModal(url) {
     const modal = document.getElementById('deleteModal');
     const form = document.getElementById('deleteForm');
