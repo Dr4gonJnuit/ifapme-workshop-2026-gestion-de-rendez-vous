@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Auth;
 
 <div class="relative">
     
-    <!-- Bouton utilisateur -->
     <button id="userDropdownButton"
         class="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400">
         
@@ -22,11 +21,9 @@ use Illuminate\Support\Facades\Auth;
         </svg>
     </button>
 
-    <!-- Menu dropdown -->
     <div id="userDropdown"
         class="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 hidden">
 
-        <!-- Info utilisateur -->
         <div class="px-4 py-3">
             <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
                 {{ Auth::user()->username ?? 'Utilisateur' }}
@@ -37,24 +34,6 @@ use Illuminate\Support\Facades\Auth;
             </span>
         </div>
 
-        <!-- Menu -->
-        <ul class="py-2">
-            <li>
-                <a href="#"
-                   class="flex px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                    Profil
-                </a>
-            </li>
-
-            <li>
-                <a href="#"
-                   class="flex px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                    Paramètres
-                </a>
-            </li>
-        </ul>
-
-        <!-- Logout -->
         <div class="border-t border-gray-200 dark:border-gray-700">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

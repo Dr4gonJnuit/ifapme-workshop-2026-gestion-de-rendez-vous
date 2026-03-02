@@ -9,6 +9,24 @@ use Illuminate\Support\Carbon;
 
     <h1 class="text-2xl font-bold">Bienvenue, {{ Auth::user()->username ?? 'Utilisateur' }} !</h1>
 
+
+        <div class="flex gap-4 mb-6">
+        <a href="{{ route('rdvs.index') }}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+           Rendez-vous
+        </a>
+
+        <a href="{{ route('clients.index') }}" 
+          class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+          Clients
+        </a>
+
+        <a href="{{ route('prestataire.index') }}" 
+           class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
+           Prestataires
+        </a>
+    </div>
+    
     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 class="text-xl font-semibold mb-4">Rendez-vous à venir cette semaine</h2>
         @php
