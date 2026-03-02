@@ -9,15 +9,14 @@ use Illuminate\Support\Carbon;
 
     <h1 class="text-2xl font-bold">Bienvenue, {{ Auth::user()->username ?? 'Utilisateur' }} !</h1>
 
-
-        <div class="flex gap-4 mb-6">
+    <div class="flex gap-4 mb-6">
         <a href="{{ route('rdvs.index') }}" 
            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
            Rendez-vous
         </a>
 
         <a href="{{ route('clients.index') }}" 
-          class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+           class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
           Clients
         </a>
 
@@ -27,15 +26,17 @@ use Illuminate\Support\Carbon;
         </a>
     </div>
     
+    {{-- Rendez-vous à venir cette semaine --}}
     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 class="text-xl font-semibold mb-4">Rendez-vous à venir cette semaine</h2>
         @php
             $today = Carbon::today();
             $endOfWeek = Carbon::today()->endOfWeek();
+
             $weeklyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
                             ->where('user_id', Auth::id())
-                            ->whereBetween('date', [$today, $endOfWeek])
-                            ->orderBy('date', 'asc')
+                            ->whereBetween('start_time', [$today, $endOfWeek])
+                            ->orderBy('start_time', 'asc')
                             ->get();
         @endphp
 
@@ -47,7 +48,7 @@ use Illuminate\Support\Carbon;
                     <li class="p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
                         <div class="flex justify-between">
                             <span class="font-medium">
-                                {{ $rdv->date->format('d/m/Y H:i') }}
+                                {{ $rdv->start_time->format('d/m/Y H:i') }}
                             </span>
                             <span class="text-theme-sm">
                                 Client : {{ $rdv->client->firstname ?? 'Non défini' }} {{ $rdv->client->lastname ?? '' }}
@@ -65,14 +66,16 @@ use Illuminate\Support\Carbon;
         @endif
     </div>
 
+    {{-- Rendez-vous à venir ce mois --}}
     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 class="text-xl font-semibold mb-4">Rendez-vous à venir ce mois</h2>
         @php
             $endOfMonth = Carbon::today()->endOfMonth();
+
             $monthlyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
                             ->where('user_id', Auth::id())
-                            ->whereBetween('date', [$today, $endOfMonth])
-                            ->orderBy('date', 'asc')
+                            ->whereBetween('start_time', [$today, $endOfMonth])
+                            ->orderBy('start_time', 'asc')
                             ->get();
         @endphp
 
@@ -84,7 +87,7 @@ use Illuminate\Support\Carbon;
                     <li class="p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
                         <div class="flex justify-between">
                             <span class="font-medium">
-                                {{ $rdv->date->format('d/m/Y H:i') }}
+                                {{ $rdv->start_time->format('d/m/Y H:i') }}
                             </span>
                             <span class="text-theme-sm">
                                 Client : {{ $rdv->client->firstname ?? 'Non défini' }} {{ $rdv->client->lastname ?? '' }}
