@@ -14,7 +14,7 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Client::query();
+        $query = Client::withTrashed();
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -26,9 +26,10 @@ class ClientController extends Controller
             });
         }
 
-        $clients = $query->orderBy('lastname')
+        $clients = $query
+            ->orderBy('deleted_at', 'desc') // Ensure deleted clients are at the end
+            ->orderBy('lastname')
             ->orderBy('firstname')
-            ->orderBy('deleted_at') // Ensure deleted clients are at the end
             ->paginate(10);
 
         $clients->appends($request->all());
@@ -109,7 +110,7 @@ class ClientController extends Controller
     public function destroy(string $id)
     {
         $client = Client::findOrFail($id);
-        $client->update(['deleted_at' => now()]);
+        $client->delete();
 
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
     }
