@@ -66,6 +66,10 @@
                 </thead>
                 <tbody>
                     @forelse($clients as $client)
+                        @if ($client->deleted_at !== null)
+                            @continue
+                            {{-- <tr class="border-b bg-red-50 text-gray-400 line-through"> --}}
+                        @endif
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">{{ $client->firstname }}</td>
                             <td class="px-4 py-3">{{ $client->lastname }}</td>
