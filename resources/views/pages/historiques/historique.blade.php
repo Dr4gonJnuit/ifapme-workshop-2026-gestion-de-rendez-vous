@@ -42,9 +42,6 @@
                             {{ $rdv->end_time->format('d/m/Y H:i') }}
                         </td>
 
-                        <td class="p-3">
-                            {{ $rdv->status_text }}
-                        </td>
                     </tr>
                 @endforeach
             </tbody>
