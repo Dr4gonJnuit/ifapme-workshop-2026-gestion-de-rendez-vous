@@ -66,7 +66,12 @@
                 </thead>
                 <tbody>
                     @forelse($clients as $client)
-                        <tr class="border-b hover:bg-gray-50">
+                        @if ($client->trashed())
+                            @continue
+                            {{-- <tr class="border-b bg-red-50 text-gray-400 line-through"> --}}
+                        @else
+                            <tr class="border-b hover:bg-gray-50">
+                        @endif
                             <td class="px-4 py-3">{{ $client->firstname }}</td>
                             <td class="px-4 py-3">{{ $client->lastname }}</td>
                             <td class="px-4 py-3">{{ $client->email }}</td>

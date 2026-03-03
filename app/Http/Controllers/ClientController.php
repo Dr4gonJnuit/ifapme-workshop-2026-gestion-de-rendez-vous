@@ -14,7 +14,7 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Client::query();
+        $query = Client::withTrashed();
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -26,7 +26,11 @@ class ClientController extends Controller
             });
         }
 
-        $clients = $query->orderBy('lastname')->orderBy('firstname')->paginate(10);
+        $clients = $query
+            ->orderBy('deleted_at', 'desc') // Ensure deleted clients are at the end
+            ->orderBy('lastname')
+            ->orderBy('firstname')
+            ->paginate(10);
 
         $clients->appends($request->all());
 
@@ -36,10 +40,10 @@ class ClientController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
-    {
-        return view('pages.client.create');
-    }
+    // public function create(Request $request)
+    // {
+    //     return view('pages.client.create');
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -64,22 +68,22 @@ class ClientController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $client = Client::findOrFail($id);
+    // public function show(string $id)
+    // {
+    //     $client = Client::findOrFail($id);
 
-        return view('pages.client.show', compact('client'));
-    }
+    //     return view('pages.client.show', compact('client'));
+    // }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        $client = Client::findOrFail($id);
+    // public function edit(string $id)
+    // {
+    //     $client = Client::findOrFail($id);
 
-        return view('pages.client.edit', compact('client'));
-    }
+    //     return view('pages.client.edit', compact('client'));
+    // }
 
     /**
      * Update the specified resource in storage.
