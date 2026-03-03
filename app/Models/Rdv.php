@@ -34,9 +34,6 @@ class Rdv extends Model
         return $this->belongsTo(Utilisateur::class, 'user_id', 'id');
     }
 
-    public function status() {
-        return $this->belongsTo(Status::class, 'status', 'id');
-    }
 
     protected static function boot()
     {
@@ -48,26 +45,23 @@ class Rdv extends Model
         });
     }
 
-    /**
-     * Retourne le statut textuel (à partir de la relation ou calculé sur start_time)
-     */
-    public function getStatusTextAttribute()
-    {
-        if ($this->relationLoaded('status')) {
-            $rel = $this->getRelation('status');
-            if ($rel instanceof Status) {
-                return $rel->name;
-            }
-        }
-        if ($this->status) {
-            $status = Status::find($this->status);
-            if ($status) {
-                return $status->name;
-            }
-        }
-        if ($this->start_time instanceof Carbon) {
-            return $this->start_time->lte(Carbon::now()) ? 'passé' : 'à venir';
-        }
-        return '';
-    }
+    // public function getStatusTextAttribute()
+    // {
+    //     if ($this->relationLoaded('status')) {
+    //         $rel = $this->getRelation('status');
+    //         if ($rel instanceof Status) {
+    //             return $rel->name;
+    //         }
+    //     }
+    //     if ($this->status) {
+    //         $status = Status::find($this->status);
+    //         if ($status) {
+    //             return $status->name;
+    //         }
+    //     }
+    //     if ($this->start_time instanceof Carbon) {
+    //         return $this->start_time->lte(Carbon::now()) ? 'passé' : 'à venir';
+    //     }
+    //     return '';
+    // }
 }

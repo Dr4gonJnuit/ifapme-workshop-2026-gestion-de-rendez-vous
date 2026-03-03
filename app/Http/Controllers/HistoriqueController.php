@@ -9,7 +9,7 @@ class HistoriqueController extends Controller
 {
     public function index()
     {
-        $rdvs = Rdv::with(['client', 'prestataire', 'status'])
+        $rdvs = Rdv::with(['client', 'prestataire'])
             ->where('user_id', Auth::id())
             ->where('start_time', '<', now()) // uniquement les RDV passés
             ->orderBy('start_time', 'desc')

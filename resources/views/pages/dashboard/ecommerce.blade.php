@@ -31,7 +31,7 @@ use Illuminate\Support\Carbon;
             $today = Carbon::today();
             $endOfWeek = Carbon::today()->endOfWeek();
 
-            $weeklyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
+            $weeklyRdv = \App\Models\Rdv::with(['client', 'prestataire'])
                             ->where('user_id', Auth::id())
                             ->whereBetween('start_time', [$today, $endOfWeek])
                             ->orderBy('start_time', 'asc')
@@ -73,7 +73,7 @@ use Illuminate\Support\Carbon;
         @php
             $endOfMonth = Carbon::today()->endOfMonth();
 
-            $monthlyRdv = \App\Models\Rdv::with(['client', 'prestataire', 'status'])
+            $monthlyRdv = \App\Models\Rdv::with(['client', 'prestataire'])
                             ->where('user_id', Auth::id())
                             ->whereBetween('start_time', [$today, $endOfMonth])
                             ->orderBy('start_time', 'asc')
