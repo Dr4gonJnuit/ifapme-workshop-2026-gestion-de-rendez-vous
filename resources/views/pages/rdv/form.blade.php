@@ -1,6 +1,6 @@
 <div class="space-y-4">
     <div>
-        <label for="start_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Début du rendez-vous</label>
+        <label for="start_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date et heure de début</label>
         <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', isset($rdv) ? $rdv->start_time->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" required>
         @error('start_time')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -8,9 +8,9 @@
     </div>
 
     <div>
-        <label for="end_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fin du rendez-vous</label>
-        <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', isset($rdv) ? $rdv->end_time->format('Y-m-d\TH:i') : '') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" required>
-        @error('end_time')
+        <label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Durée (en minutes)</label>
+        <input type="number" name="duration" id="duration" value="{{ old('duration', isset($rdv) ? $rdv->start_time->diffInMinutes($rdv->end_time) : '') }}" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" required>
+        @error('duration')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
         @enderror
     </div>

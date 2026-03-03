@@ -6,7 +6,6 @@ use App\Models\Rdv;
 use App\Models\Client;
 use App\Models\Prestataire;
 use App\Models\Status;
-use App\Http\Requests\RdvRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -25,18 +24,18 @@ class RdvController extends BaseController
      * @param string $prestataireId
      * @param Carbon $start
      * @param Carbon $end
-     * @param string|null $excludeRdvId ID du rendez-vous à exclure (pour l'update)
+     * @param string|null $excludeRdvId
      * @return bool
      */
     private function hasOverlap($prestataireId, Carbon $start, Carbon $end, $excludeRdvId = null)
     {
         $query = Rdv::where('prestataire_id', $prestataireId)
             ->where(function ($q) use ($start, $end) {
-                $q->whereBetween('start_time', [$start, $end]) // début dans l'intervalle
-                  ->orWhereBetween('end_time', [$start, $end]) // fin dans l'intervalle
+                $q->whereBetween('start_time', [$start, $end])
+                  ->orWhereBetween('end_time', [$start, $end])
                   ->orWhere(function ($q2) use ($start, $end) {
                       $q2->where('start_time', '<=', $start)
-                         ->where('end_time', '>=', $end); // chevauchement complet
+                         ->where('end_time', '>=', $end);
                   });
             });
 
@@ -47,10 +46,13 @@ class RdvController extends BaseController
         return $query->exists();
     }
 
+    /**
+     * Affiche la liste des rendez-vous à venir avec filtres.
+     */
     public function index(Request $request)
     {
         $query = Rdv::with(['client', 'prestataire'])
-                    ->where('start_time', '>=', Carbon::now());
+                    ->where('start_time', '>=', Carbon::now('UTC'));
 
         if ($request->filled('prestataire_id')) {
             $query->where('prestataire_id', $request->prestataire_id);
@@ -83,6 +85,9 @@ class RdvController extends BaseController
         return view('pages.rdv.index', compact('rdvs', 'prestataires', 'clients'));
     }
 
+    /**
+     * Affiche le formulaire de création.
+     */
     public function create()
     {
         $clients = Client::all();
@@ -91,6 +96,9 @@ class RdvController extends BaseController
         return view('pages.rdv.create', compact('clients', 'prestataires'));
     }
 
+    /**
+     * Détermine l'ID du statut en fonction de la date (passé/à venir).
+     */
     protected function determineStatusId(Carbon $date)
     {
         $name = $date->isPast() ? 'passé' : 'à venir';
@@ -98,26 +106,45 @@ class RdvController extends BaseController
         return $status->id;
     }
 
-    public function store(RdvRequest $request)
+    /**
+     * Enregistre un nouveau rendez-vous.
+     */
+    public function store(Request $request)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'start_time'      => 'required|date',
+            'duration'        => 'required|integer|min:1',
+            'client_id'       => 'required|exists:client,id',
+            'prestataire_id'  => 'required|exists:prestataire,id',
+        ]);
 
         $start = Carbon::parse($validated['start_time']);
-        $end   = Carbon::parse($validated['end_time']);
+        // Conversion explicite en entier pour éviter l'erreur Carbon
+        $duration = (int) $validated['duration'];
+        $end = $start->copy()->addMinutes($duration);
 
         // Vérification des chevauchements pour le même prestataire
         if ($this->hasOverlap($validated['prestataire_id'], $start, $end)) {
             return back()->withErrors(['start_time' => 'Ce créneau horaire est déjà occupé pour ce prestataire.'])->withInput();
         }
 
-        $validated['user_id'] = Auth::id();
-        $validated['status'] = $this->determineStatusId($start);
+        $rdvData = [
+            'start_time'      => $start,
+            'end_time'        => $end,
+            'client_id'       => $validated['client_id'],
+            'prestataire_id'  => $validated['prestataire_id'],
+            'user_id'         => Auth::id(),
+            'status'          => $this->determineStatusId($start),
+        ];
 
-        Rdv::create($validated);
+        Rdv::create($rdvData);
 
         return redirect()->route('rdvs.index')->with('success', 'Rendez-vous ajouté.');
     }
 
+    /**
+     * Affiche le formulaire d'édition.
+     */
     public function edit(Rdv $rdv)
     {
         $clients = Client::all();
@@ -126,31 +153,53 @@ class RdvController extends BaseController
         return view('pages.rdv.edit', compact('rdv', 'clients', 'prestataires'));
     }
 
-    public function update(RdvRequest $request, Rdv $rdv)
+    /**
+     * Met à jour un rendez-vous.
+     */
+    public function update(Request $request, Rdv $rdv)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'start_time'      => 'required|date',
+            'duration'        => 'required|integer|min:1',
+            'client_id'       => 'required|exists:client,id',
+            'prestataire_id'  => 'required|exists:prestataire,id',
+        ]);
 
         $start = Carbon::parse($validated['start_time']);
-        $end   = Carbon::parse($validated['end_time']);
+        // Conversion explicite en entier pour éviter l'erreur Carbon
+        $duration = (int) $validated['duration'];
+        $end = $start->copy()->addMinutes($duration);
 
         // Vérification des chevauchements pour le même prestataire, en excluant le rendez-vous actuel
         if ($this->hasOverlap($validated['prestataire_id'], $start, $end, $rdv->id)) {
             return back()->withErrors(['start_time' => 'Ce créneau horaire est déjà occupé pour ce prestataire.'])->withInput();
         }
 
-        $validated['status'] = $this->determineStatusId($start);
+        $rdvData = [
+            'start_time'      => $start,
+            'end_time'        => $end,
+            'client_id'       => $validated['client_id'],
+            'prestataire_id'  => $validated['prestataire_id'],
+            'status'          => $this->determineStatusId($start),
+        ];
 
-        $rdv->update($validated);
+        $rdv->update($rdvData);
 
         return redirect()->route('rdvs.index')->with('success', 'Rendez-vous mis à jour.');
     }
 
+    /**
+     * Supprime un rendez-vous.
+     */
     public function destroy(Rdv $rdv)
     {
         $rdv->delete();
         return redirect()->route('rdvs.index')->with('success', 'Rendez-vous supprimé.');
     }
 
+    /**
+     * Met à jour manuellement le statut (à venir / passé).
+     */
     public function updateStatus(Request $request, Rdv $rdv)
     {
         $validated = $request->validate([
