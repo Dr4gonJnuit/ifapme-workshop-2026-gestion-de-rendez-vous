@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PrestataireController;
 use App\Http\Controllers\RdvController;
+use App\Http\Controllers\HistoriqueController;
 
 // dashboard pages
 Route::get('/', function () {
@@ -37,3 +38,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Using middleware later for authentication and authorization
 Route::resource('clients', ClientController::class);
+
+
+Route::get('/historique', [HistoriqueController::class, 'index'])
+    ->name('historique.index');
