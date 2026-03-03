@@ -16,7 +16,6 @@
                     <th class="p-3 text-left">Prestataire</th>
                     <th class="p-3 text-left">Début</th>
                     <th class="p-3 text-left">Fin</th>
-                    <th class="p-3 text-left">Statut</th>
                 </tr>
             </thead>
 
