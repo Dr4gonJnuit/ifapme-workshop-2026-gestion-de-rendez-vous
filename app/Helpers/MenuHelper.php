@@ -28,6 +28,12 @@ class MenuHelper
                 'name' => 'Rendez-vous',
                 'path' => '/rdvs',
             ],
+            [
+                
+                'icon' => 'historique',
+                'name' => 'Historique',
+                'path' => '/historique',
+            ],
         ];
     }
 
